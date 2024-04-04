@@ -1,21 +1,30 @@
 import pandas as pd
+from sklearn.preprocessing import MultiLabelBinarizer
 
-# Step 1: Read the CSV file
-df = pd.read_csv('your_data.csv')
+# Step 1: Read the Excel file
+excel_file = 'your_excel_file.xlsx'
+df = pd.read_excel(excel_file)
+
+# Assuming your Excel file has features in columns 1 to n-1 and labels in the last column
+features = df.iloc[:, :-1].values
+labels = df.iloc[:, -1].values.reshape(-1, 1)  # Reshape labels to make it a column vector
 
 # Step 2: Perform one-hot encoding for labels
-df = pd.get_dummies(df, columns=['label_column'])  # Assuming 'label_column' is the name of your label column
+mlb = MultiLabelBinarizer()
+labels_one_hot = mlb.fit_transform(labels)
 
-# Step 3: Convert data into libsvm format and write to a new file
-with open('converted_data.txt', 'w') as f:
-    # Write header containing the number of samples, features, and labels
-    f.write(f"{len(df)} {len(df.columns)-1} {len(df.columns)-1}\n")
+# Step 3: Write features and one-hot encoded labels to separate text files
+features_file = 'features.txt'
+labels_file = 'labels_one_hot.txt'
 
-    # Iterate over each row
-    for index, row in df.iterrows():
-        label = int(row[-len(df.columns)+1:])  # Extract the one-hot encoded label
-        features = row.drop(labels=df.columns[-len(df.columns)+1:])  # Drop the label columns
-        feature_values = ' '.join(f"{i+1}:{value}" for i, value in enumerate(features) if value != 0)
-        f.write(f"{label} {feature_values}\n")
+# Write features to file
+with open(features_file, 'w') as f:
+    for row in features:
+        f.write(' '.join(map(str, row)) + '\n')
 
-print("Conversion completed. Data written to 'converted_data.txt'.")
+# Write one-hot encoded labels to file
+with open(labels_file, 'w') as f:
+    for row in labels_one_hot:
+        f.write(' '.join(map(str, row)) + '\n')
+
+print("Conversion completed. Features written to '{}' and one-hot encoded labels written to '{}'.".format(features_file, labels_file))

@@ -1,0 +1,25 @@
+import pandas as pd
+
+# Read the Excel file
+data = pd.read_excel('your_excel_file.xlsx')
+
+# Split the attribute_name column by comma and create a new DataFrame
+attributes = data['attribute_name'].str.split(',', expand=True)
+
+# Iterate over each row to check if is_cde is true and create label
+labels = []
+for index, row in data.iterrows():
+    label = []
+    for i, attribute in enumerate(attributes.loc[index]):
+        if row['is_cde'].split(',')[i] == 'true':
+            label.append(attribute)
+    labels.append(','.join(label))
+
+# Add the 'label' column to the original DataFrame
+data['label'] = labels
+
+# If all is_cde values are false, keep label empty
+data['label'] = data.apply(lambda x: '' if all(attr == 'false' for attr in x['is_cde'].split(',')) else x['label'], axis=1)
+
+# Save the modified DataFrame as a CSV file
+data.to_csv('modified_data.csv', index=False)

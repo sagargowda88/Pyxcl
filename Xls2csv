@@ -3,21 +3,20 @@ import pandas as pd
 # Read the Excel file
 data = pd.read_excel('your_excel_file.xlsx')
 
-# Split the attribute_name column by comma and create a new DataFrame
-attributes = data['attribute_name'].str.split(',', expand=True)
-
-# Iterate over each row to check if is_cde is true and create label
+# Iterate over each row
 labels = []
 for index, row in data.iterrows():
     label = []
-    is_cde_list = row['is_cde'].split(',')
-    attribute_list = attributes.loc[index]
-    if len(is_cde_list) != len(attribute_list):
-        print("Error: Length mismatch at index:", index)
+    attributes = row['attribute_name'].split(',')
+    is_cde_values = row['is_cde'].split(',')
+    if len(attributes) != len(is_cde_values):
+        print("Length mismatch at index:", index)
         continue
-    print("Index:", index, "is_cde list length:", len(is_cde_list), "attribute list length:", len(attribute_list))
-    for i, attribute in enumerate(attribute_list):
-        if is_cde_list[i] == 'true':
+    print("Index:", index)
+    print("Attribute Names:", attributes)
+    print("is_cde Values:", is_cde_values)
+    for attribute, is_cde in zip(attributes, is_cde_values):
+        if is_cde.strip().lower() == 'true':
             label.append(attribute)
     labels.append(','.join(label))
 
@@ -25,7 +24,7 @@ for index, row in data.iterrows():
 data['label'] = labels
 
 # If all is_cde values are false, keep label empty
-data['label'] = data.apply(lambda x: '' if all(attr == 'false' for attr in x['is_cde'].split(',')) else x['label'], axis=1)
+data['label'] = data.apply(lambda x: '' if all(attr.strip().lower() == 'false' for attr in x['is_cde'].split(',')) else x['label'], axis=1)
 
 # Save the modified DataFrame as a CSV file
 data.to_csv('modified_data.csv', index=False)
